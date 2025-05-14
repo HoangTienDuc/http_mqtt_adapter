@@ -139,7 +139,3 @@ python3 src/tools/http_to_mqtt_rrp.py
 
 # 4. The client receives the HTTP response
 ```
-
----
-
-Let me know if you'd like to include diagrams, logs, or environment variable setup instructions.
