@@ -1,6 +1,4 @@
-Here's your README rewritten in proper English and Markdown style:
 
----
 
 # MQTT Adapter System
 
