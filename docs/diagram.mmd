@@ -1,0 +1,136 @@
+classDiagram
+    class IMQTTProtocol {
+        <<interface>>
+        +start() Future~None~
+        +stop() Future~None~
+        +publish(topic: str, payload: dict, qos: int) Future~None~
+        +request(topic: str, payload: dict, correlation_id: str, timeout: float) Future~MQTTResponse~
+    }
+
+    class BaseModel {
+        <<abstract>>
+    }
+
+    class MQTTRequest {
+        +str topic
+        +dict payload
+        +str correlation_id
+        +str target_broker_id
+        +to_dict() dict
+    }
+
+    class MQTTResponse {
+        +int status_code
+        +dict payload
+        +str correlation_id
+        +to_dict() dict
+    }
+
+    class MQTTBrokerConfig {
+        +str broker_id
+        +str host
+        +int port
+        +str username
+        +str password
+        +str client_id
+        +bool clean_session
+        +int qos
+        +int keepalive
+        +List~str~ subscribe_topics
+    }
+
+    class MQTTAppConfig {
+        +Dict~str, MQTTBrokerConfig~ brokers
+        +load_from_file(file_path: str) MQTTAppConfig
+        +get_broker_config(broker_id: str) MQTTBrokerConfig
+        +get_all_broker_ids() List~str~
+    }
+
+    class BaseProtocol {
+        -asyncio.AbstractEventLoop loop
+        -MQTTBrokerConfig config
+        -bool _running
+        -Client client
+        -Dict~str, asyncio.Future~ _pending_requests
+        -MQTTBrokerRegistry _broker_registry
+        -Dict~str, Callable~ _service_handlers
+        +__init__(config: MQTTBrokerConfig, broker_registry: MQTTBrokerRegistry, loop: Optional[asyncio.AbstractEventLoop])
+        -_on_connect(client, userdata, flags, rc)
+        -_on_disconnect(client, userdata, rc)
+        -_on_message(client, userdata, message: MQTTMessage)
+        +async _handle_message(request: MQTTRequest)
+        -async _route_to_target_broker(request: MQTTRequest) Future~MQTTResponse~
+        -async _process_with_service_handler(request: MQTTRequest) Future~MQTTResponse~
+        +register_service_handler(service_name: str, handler: Callable)
+        +async start()
+        +async stop()
+        +async publish(topic: str, payload: dict, qos: int)
+        +async request(topic: str, payload: dict, correlation_id: str, timeout: float)
+    }
+
+    class MQTTBrokerRegistry {
+        -Dict~str, BaseProtocol~ protocols
+        +register_protocol(broker_id: str, protocol: BaseProtocol)
+        +get_protocol(broker_id: str) BaseProtocol
+        +list_protocols() List~str~
+    }
+
+    class MQTTServiceManager {
+        -MQTTBrokerRegistry registry
+        -MQTTAppConfig config
+        -asyncio.AbstractEventLoop loop
+        +__init__(config: MQTTAppConfig, loop: Optional[asyncio.AbstractEventLoop])
+        +async initialize()
+        +async shutdown()
+        +async route_request(request: MQTTRequest) Future~MQTTResponse~
+        +get_protocol(broker_id: str) BaseProtocol
+        +register_service_handler(broker_id: str, service_name: str, handler: Callable)
+    }
+
+    class WebServer {
+        -asyncio.AbstractEventLoop loop
+        -MQTTServiceManager mqtt_manager
+        +__init__(mqtt_manager: MQTTServiceManager, loop: Optional[asyncio.AbstractEventLoop])
+        +async start()
+        +async stop()
+        +async handle_http_request(request: HTTPRequest) HTTPResponse
+        -async _convert_to_mqtt_request(http_request: HTTPRequest) MQTTRequest
+        -async _convert_to_http_response(mqtt_response: MQTTResponse) HTTPResponse
+    }
+
+    class HTTPRequest {
+        +str method
+        +str path
+        +dict headers
+        +dict body
+        +str broker_id
+        +str topic
+    }
+
+    class HTTPResponse {
+        +int status_code
+        +dict headers
+        +dict body
+    }
+
+    class MQTTProtocolFactory {
+        +create_protocols(config: MQTTAppConfig, registry: MQTTBrokerRegistry, loop: asyncio.AbstractEventLoop) Dict~str, BaseProtocol~
+    }
+
+    BaseModel <|-- MQTTRequest
+    BaseModel <|-- MQTTResponse
+    IMQTTProtocol <|.. BaseProtocol : implements
+    BaseProtocol --> MQTTBrokerConfig : uses
+    BaseProtocol --> MQTTBrokerRegistry : uses
+    MQTTBrokerRegistry --> BaseProtocol : manages
+    MQTTServiceManager --> MQTTBrokerRegistry : uses
+    MQTTServiceManager --> MQTTAppConfig : uses
+    WebServer --> MQTTServiceManager : uses
+    WebServer --> HTTPRequest : processes
+    WebServer --> HTTPResponse : returns
+    MQTTServiceManager --> MQTTRequest : processes
+    MQTTServiceManager --> MQTTResponse : returns
+    MQTTAppConfig --> MQTTBrokerConfig : contains
+    MQTTProtocolFactory --> BaseProtocol : creates
+    MQTTProtocolFactory --> MQTTAppConfig : uses
+    MQTTProtocolFactory --> MQTTBrokerRegistry : uses

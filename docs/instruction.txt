@@ -1,0 +1,21 @@
+Viết cho tôi class uml diagram cho service adapter bao gồm: 
+1. Web server sử dụng asyncio
+2. MQTT request response pattern: 
+- subcribe n broker: broker ngoài internet, broker trong mạng local
+
+Đối với chiều thông tin từ local ra internet:
+1. Web server làm nhiệm vụ nhận http request sau đó forward cho MQTT broker nào đó. Cụ thể:
+- Cho phép nhận request từ client
+- Trên mỗi request sẽ chứa thông tin MQTT 
+- Khi nhận được request: tùy từng request có thể gọi đến service mqtt khác nhau dựa vào thông tin MQTT trước đó
+- Khi các service xử lý xong, lấy response từ các service và trả về cho client
+
+2. MQTT services, bao gồm nhiều MQTT với các broker khác nhau. Nhận MQTT request sau đó có thể fire and forget hoặc request response đến MQTT broker khác.
+- Local MQTT nhận được request
+- Trên mỗi request sẽ chứa thông tin MQTT 
+- Khi nhận được request: tùy từng request có thể gọi đến service mqtt khác
+- Có thể nhận hoặc không nhận response trả về  tùy từng service
+
+
+
+Trong API service sẽ có interface, cho phép tạo các service khác nhau để gọi đến các apis khác nhau

@@ -1,0 +1,4 @@
+aiohttp>=3.8.5
+paho-mqtt>=2.2.1
+pydantic>=2.0.0
+PyYAML>=6.0 

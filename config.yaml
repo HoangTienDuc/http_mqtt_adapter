@@ -1,0 +1,36 @@
+brokers:
+  internet 1:
+    host: "192.168.1.19"
+    port: 1883
+    username: null
+    password: null
+    client_id: "mqtt-adapter-internet 1"
+    clean_session: true
+    qos: 1
+    keepalive: 60
+    subscribe_topics:
+      - "iamlistening/#"
+
+  internet 2:
+    host: "192.168.1.19"
+    port: 1883
+    username: null
+    password: null
+    client_id: "mqtt-adapter-internet 2"
+    clean_session: true
+    qos: 1
+    keepalive: 60
+    subscribe_topics:
+      - "requests/#"
+  
+  local:
+    host: "localhost"
+    port: 1883
+    username: null
+    password: null
+    client_id: "mqtt-adapter-local"
+    clean_session: true
+    qos: 0
+    keepalive: 60
+    subscribe_topics:
+      - "requests/#"
